@@ -1,3 +1,5 @@
+import 'package:animated_gridview_app/gridview.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -27,13 +29,63 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
+
+  /// 全てのアイテム
+  List<Map<String, dynamic>> gridviewItems = [
+    {'id': '1'},
+    {'id': '2'},
+    {'id': '3'},
+    {'id': '4'},
+    {'id': '5'},
+    {'id': '6'},
+    {'id': '7'},
+    {'id': '8'},
+    {'id': '9'},
+    {'id': '10'},
+    {'id': '11'},
+    {'id': '12'},
+    {'id': '13'},
+    {'id': '14'},
+    {'id': '15'},
+    {'id': '16'},
+    {'id': '17'},
+    {'id': '18'},
+    {'id': '19'},
+    {'id': '20'},
+    {'id': '21'},
+    {'id': '22'},
+    {'id': '23'},
+    {'id': '24'},
+    {'id': '25'},
+    {'id': '26'},
+    {'id': '27'},
+    {'id': '28'},
+    {'id': '29'},
+    {'id': '30'},
+  ];
+
+  /// 削除したいアイテム
+  List<Map<String, dynamic>> selectingItemsList = [];
+
+
+  void deleteFunction() {
     setState(() {
-      _counter++;
+      for (int i = 0; i < selectingItemsList.length; i++) {
+        gridviewItems.remove(selectingItemsList[i]);
+      }
+      selectingItemsList.clear();
     });
   }
+
+
+
+
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -41,24 +93,14 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
+      body: AnimatedGridView(
+          gridviewItems: gridviewItems,
+          selectingItemsList: selectingItemsList),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        onPressed: deleteFunction,
+        tooltip: 'delete',
+        backgroundColor: Colors.red,
+        child: const Icon(Icons.delete),
       ),
     );
   }
