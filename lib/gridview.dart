@@ -13,6 +13,7 @@ class AnimatedGridView extends StatefulWidget {
 }
 
 class _AnimatedGridViewState extends State<AnimatedGridView> {
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -71,4 +72,16 @@ class _AnimatedGridViewState extends State<AnimatedGridView> {
       itemCount: widget.gridviewItems.length,
     );
   }
+}
+
+void deleteFunction({
+  required List gridviewItems,
+  required List selectingItemsList,
+  required Function reBuild
+}) {
+  for (int i = 0; i < selectingItemsList.length; i++) {
+    gridviewItems.remove(selectingItemsList[i]);
+  }
+  selectingItemsList.clear();
+  reBuild();
 }

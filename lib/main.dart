@@ -65,19 +65,16 @@ class _MyHomePageState extends State<MyHomePage> {
     {'id': '30'},
   ];
 
-  /// 削除したいアイテム
+  /// 削除したいアイテムを管理するリスト
   List<Map<String, dynamic>> selectingItemsList = [];
 
+  /// 削除後にアイテムが移動する数を管理するリスト
+  List<int> transferenceNumberList = [];
 
-  void deleteFunction() {
-    setState(() {
-      for (int i = 0; i < selectingItemsList.length; i++) {
-        gridviewItems.remove(selectingItemsList[i]);
-      }
-      selectingItemsList.clear();
-    });
+
+  void reBuild() {
+    setState(() {});
   }
-
 
 
 
@@ -97,7 +94,12 @@ class _MyHomePageState extends State<MyHomePage> {
           gridviewItems: gridviewItems,
           selectingItemsList: selectingItemsList),
       floatingActionButton: FloatingActionButton(
-        onPressed: deleteFunction,
+        onPressed: () {
+          deleteFunction(
+              gridviewItems: gridviewItems,
+              selectingItemsList: selectingItemsList,
+              reBuild: reBuild);
+        },
         tooltip: 'delete',
         backgroundColor: Colors.red,
         child: const Icon(Icons.delete),
