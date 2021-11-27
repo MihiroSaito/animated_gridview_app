@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 class AnimatedGridView extends StatefulWidget {
+
   const AnimatedGridView({
     Key? key,
     required this.gridviewItems,
-    required this.selectingItemsList}) : super(key: key);
+    required this.selectingItemsList,
+    required this.crossAxisCount}) : super(key: key);
+
   final List<dynamic> gridviewItems;
   final List<Map<String, dynamic>> selectingItemsList;
+  final int crossAxisCount;
 
   @override
   _AnimatedGridViewState createState() => _AnimatedGridViewState();
@@ -23,8 +27,8 @@ class _AnimatedGridViewState extends State<AnimatedGridView> {
           right: 10,
           bottom: 15
       ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: widget.crossAxisCount,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -74,14 +78,90 @@ class _AnimatedGridViewState extends State<AnimatedGridView> {
   }
 }
 
+
+
+
+
 void deleteFunction({
-  required List gridviewItems,
-  required List selectingItemsList,
+  required List<Map<String, dynamic>> gridviewItems,
+  required List<Map<String, dynamic>> selectingItemsList,
+  required int crossAxisCount,
   required Function reBuild
 }) {
+
+  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
+      gridviewItems: gridviewItems,
+      selectingItemsList: selectingItemsList,
+      crossAxisCount: crossAxisCount);
+  /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
+
+
+  //todo: アイテムの削除アニメーションを追加する
+
+
   for (int i = 0; i < selectingItemsList.length; i++) {
     gridviewItems.remove(selectingItemsList[i]);
   }
   selectingItemsList.clear();
   reBuild();
+}
+
+
+
+
+
+
+Map<String, dynamic> identifyThePositionToMove({
+  required List<Map<String, dynamic>> gridviewItems,
+  required List<Map<String, dynamic>> selectingItemsList,
+  required int crossAxisCount
+}) {
+
+  final List<Map<String, dynamic>> oldItemsList = [...gridviewItems];
+  /// 削除前のアイテムを管理する
+
+  final List<Map<String, dynamic>> newItemsList = [...gridviewItems];
+  /// 削除後のアイテムを管理する
+
+  for (int i = 0; i < selectingItemsList.length; i++) {
+    if (newItemsList.contains(selectingItemsList[i])) {
+      newItemsList.remove(selectingItemsList[i]);
+    }
+  }
+  /// oldItemsListとnewItemsListの用意が完了
+
+
+
+  final List<Map<String, dynamic>> oldItemsInfoList = [];
+  /// oldItemsの位置を管理する（何段目の何列目にアイテムがあるのか）
+
+  for (int i = 0; i < oldItemsList.length; i++) {
+    int currentRow = (i / crossAxisCount).floor();
+    int currentColumn = i % crossAxisCount;
+    oldItemsInfoList.add(
+        {'data': oldItemsList[i], 'rowPosition': currentRow, 'columnPosition': currentColumn}
+    );
+  }
+
+  final List<Map<String, dynamic>> newItemsInfoList = [];
+  /// newItemsの位置を管理する（何段目の何列目にアイテムがあるのか）
+
+  for (int i = 0; i < newItemsList.length; i++) {
+    int newRow = (i / crossAxisCount).floor();
+    int newColumn = i % crossAxisCount;
+    newItemsInfoList.add(
+        {'data': newItemsList[i], 'rowPosition': newRow, 'columnPosition': newColumn}
+    );
+  }
+  /// oldItemsPositionListとnewItemsPositionListの用意が完了
+
+
+
+  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = {
+    'oldItemsInfoList': oldItemsInfoList,
+    'newItemsInfoList': newItemsInfoList
+  };
+
+  return oldItemsInfoListAndNewItemsInfoList;
+
 }

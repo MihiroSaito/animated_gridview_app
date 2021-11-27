@@ -33,6 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// 全てのアイテム
   List<Map<String, dynamic>> gridviewItems = [
+    {'id': '0'},
     {'id': '1'},
     {'id': '2'},
     {'id': '3'},
@@ -62,7 +63,6 @@ class _MyHomePageState extends State<MyHomePage> {
     {'id': '27'},
     {'id': '28'},
     {'id': '29'},
-    {'id': '30'},
   ];
 
   /// 削除したいアイテムを管理するリスト
@@ -70,6 +70,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// 削除後にアイテムが移動する数を管理するリスト
   List<int> transferenceNumberList = [];
+
+  static const crossAxisCount = 3;
 
 
   void reBuild() {
@@ -92,12 +94,14 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: AnimatedGridView(
           gridviewItems: gridviewItems,
-          selectingItemsList: selectingItemsList),
+          selectingItemsList: selectingItemsList,
+          crossAxisCount: crossAxisCount,),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           deleteFunction(
               gridviewItems: gridviewItems,
               selectingItemsList: selectingItemsList,
+              crossAxisCount: crossAxisCount,
               reBuild: reBuild);
         },
         tooltip: 'delete',
