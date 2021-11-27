@@ -153,6 +153,9 @@ Map<String, dynamic> identifyThePositionToMove({
         {'data': newItemsList[i], 'rowPosition': newRow, 'columnPosition': newColumn}
     );
   }
+  /// rowPositionは何段目かを管理している。(0から始まる)
+  /// columnPositionは何列目かを管理していて、(0から始まり、crossAxisCount - 1 で終わる)
+  /// 例: 3列のgridviewであれば一番左の列が0で一番右の列がcrossAxisCount - 1 の2で終わる
   /// oldItemsPositionListとnewItemsPositionListの用意が完了
 
 
