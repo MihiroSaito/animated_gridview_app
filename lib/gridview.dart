@@ -6,17 +6,23 @@ class AnimatedGridView extends StatefulWidget {
     Key? key,
     required this.gridviewItems,
     required this.selectingItemsList,
-    required this.crossAxisCount}) : super(key: key);
+    required this.crossAxisCount,
+    required this.enableAnimation,
+    required this.animation}) : super(key: key);
 
   final List<dynamic> gridviewItems;
   final List<Map<String, dynamic>> selectingItemsList;
   final int crossAxisCount;
+  final bool enableAnimation;
+  final Animation<Offset> animation;
 
   @override
   _AnimatedGridViewState createState() => _AnimatedGridViewState();
 }
 
-class _AnimatedGridViewState extends State<AnimatedGridView> {
+class _AnimatedGridViewState extends State<AnimatedGridView> with SingleTickerProviderStateMixin {
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -33,40 +39,52 @@ class _AnimatedGridViewState extends State<AnimatedGridView> {
         mainAxisSpacing: 10,
       ),
       itemBuilder: (BuildContext context, int index) {
-        return GestureDetector(
-          onTap: () {
-            if (widget.selectingItemsList.contains(widget.gridviewItems[index])) {
-              setState(() {
-                widget.selectingItemsList.remove(widget.gridviewItems[index]);
-              });
-            } else {
-              setState(() {
-                widget.selectingItemsList.add(widget.gridviewItems[index]);
-              });
-            }
-          },
-          child: Container(
-            decoration: BoxDecoration(
-                color: widget.selectingItemsList.contains(widget.gridviewItems[index])
-                    ? Colors.indigo
-                    : Colors.blue,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 2,
-                    blurRadius: 15,
-                    offset: const Offset(0, 0),
-                  )
-                ]
-            ),
-            child: Center(
-              child: Text(
-                widget.gridviewItems[index]['id'],
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16
+
+
+
+        return AnimatedOpacity(
+          opacity: widget.selectingItemsList.contains(widget.gridviewItems[index]) && widget.enableAnimation
+              ? 0
+              : 1,
+          duration: const Duration(milliseconds: 200),
+          child: SlideTransition(
+            position: widget.animation,
+            child: GestureDetector(
+              onTap: () {
+                if (widget.selectingItemsList.contains(widget.gridviewItems[index])) {
+                  setState(() {
+                    widget.selectingItemsList.remove(widget.gridviewItems[index]);
+                  });
+                } else {
+                  setState(() {
+                    widget.selectingItemsList.add(widget.gridviewItems[index]);
+                  });
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    color: widget.selectingItemsList.contains(widget.gridviewItems[index])
+                        ? Colors.indigo
+                        : Colors.blue,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 15,
+                        offset: const Offset(0, 0),
+                      )
+                    ]
+                ),
+                child: Center(
+                  child: Text(
+                    widget.gridviewItems[index]['id'],
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -86,7 +104,8 @@ void deleteFunction({
   required List<Map<String, dynamic>> gridviewItems,
   required List<Map<String, dynamic>> selectingItemsList,
   required int crossAxisCount,
-  required Function reBuild
+  required Function reBuild,
+  required Function startAnimation
 }) {
 
   final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
@@ -96,14 +115,16 @@ void deleteFunction({
   /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
 
 
+
   //todo: アイテムの削除アニメーションを追加する
+  startAnimation();
 
 
-  for (int i = 0; i < selectingItemsList.length; i++) {
-    gridviewItems.remove(selectingItemsList[i]);
-  }
-  selectingItemsList.clear();
-  reBuild();
+  // for (int i = 0; i < selectingItemsList.length; i++) {
+  //   gridviewItems.remove(selectingItemsList[i]);
+  // }
+  // selectingItemsList.clear();
+  // reBuild();
 }
 
 

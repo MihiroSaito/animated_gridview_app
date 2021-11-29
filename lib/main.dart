@@ -28,7 +28,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
 
   /// 全てのアイテム
@@ -79,6 +79,34 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  /// これから下の記述は本来であればGridView側で管理したい記述
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(milliseconds: 900),
+    vsync: this,
+  )..repeat(reverse: true);
+
+  // late final AnimationController _animationController = AnimationController(
+  //   vsync: this,
+  //   duration: const Duration(milliseconds: 500),
+  // );
+
+  late final Animation<Offset> _offsetAnimation = Tween<Offset>(
+    begin: Offset.zero,
+    end: const Offset(0.0, -2.25),
+  ).animate(CurvedAnimation(
+    parent: _controller,
+    curve: Curves.ease,
+  ));
+
+  bool enableAnimation = false;
+
+  void startAnimation() {
+    setState(() {
+      enableAnimation = true;
+    });
+  }
+
+
 
 
 
@@ -95,13 +123,16 @@ class _MyHomePageState extends State<MyHomePage> {
       body: AnimatedGridView(
           gridviewItems: gridviewItems,
           selectingItemsList: selectingItemsList,
-          crossAxisCount: crossAxisCount,),
+          crossAxisCount: crossAxisCount,
+          enableAnimation: enableAnimation,
+          animation: _offsetAnimation),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           deleteFunction(
               gridviewItems: gridviewItems,
               selectingItemsList: selectingItemsList,
               crossAxisCount: crossAxisCount,
+              startAnimation: startAnimation,
               reBuild: reBuild);
         },
         tooltip: 'delete',
