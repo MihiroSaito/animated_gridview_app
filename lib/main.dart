@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animated_gridview_app/gridview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -68,9 +70,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   /// 削除したいアイテムを管理するリスト
   List<Map<String, dynamic>> selectingItemsList = [];
 
-  /// 削除後にアイテムが移動する数を管理するリスト
-  List<int> transferenceNumberList = [];
-
   static const crossAxisCount = 3;
 
 
@@ -79,25 +78,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
 
-  /// これから下の記述は本来であればGridView側で管理したい記述
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 900),
-    vsync: this,
-  )..repeat(reverse: true);
-
-  // late final AnimationController _animationController = AnimationController(
-  //   vsync: this,
-  //   duration: const Duration(milliseconds: 500),
-  // );
-
-  late final Animation<Offset> _offsetAnimation = Tween<Offset>(
-    begin: Offset.zero,
-    end: const Offset(0.0, -2.25),
-  ).animate(CurvedAnimation(
-    parent: _controller,
-    curve: Curves.ease,
-  ));
-
   bool enableAnimation = false;
 
   void startAnimation() {
@@ -105,6 +85,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       enableAnimation = true;
     });
   }
+
+  void finishAnimation() {
+    setState(() {
+      enableAnimation = false;
+    });
+  }
+
+  final streamController = StreamController<bool>();
 
 
 
@@ -125,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           selectingItemsList: selectingItemsList,
           crossAxisCount: crossAxisCount,
           enableAnimation: enableAnimation,
-          animation: _offsetAnimation),
+          streamController: streamController),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           deleteFunction(
@@ -133,7 +121,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               selectingItemsList: selectingItemsList,
               crossAxisCount: crossAxisCount,
               startAnimation: startAnimation,
-              reBuild: reBuild);
+              finishAnimation: finishAnimation,
+              reBuild: reBuild,
+              streamController: streamController);
         },
         tooltip: 'delete',
         backgroundColor: Colors.red,
@@ -141,4 +131,42 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       ),
     );
   }
+}
+
+
+
+void deleteFunction({
+  required List<Map<String, dynamic>> gridviewItems,
+  required List<Map<String, dynamic>> selectingItemsList,
+  required int crossAxisCount,
+  required Function reBuild,
+  required Function startAnimation,
+  required Function finishAnimation,
+  required StreamController<bool> streamController
+}) {
+
+  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
+      gridviewItems: gridviewItems,
+      selectingItemsList: selectingItemsList,
+      crossAxisCount: crossAxisCount);
+  /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
+
+
+  startAnimation();
+  streamController.sink.add(true);
+  /// アニメーションスタート
+
+
+  //todo: アイテムを実際に削除する記述のため、アニメーションが完成したらコメントアウトを外す。
+  Timer(const Duration(milliseconds: 310), () {
+    finishAnimation();
+    for (int i = 0; i < selectingItemsList.length; i++) {
+      gridviewItems.remove(selectingItemsList[i]);
+    }
+    selectingItemsList.clear();
+    reBuild();
+
+    streamController.sink.add(false);
+    /// アニメーション終了
+  });
 }

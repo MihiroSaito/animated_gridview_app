@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class AnimatedGridView extends StatefulWidget {
@@ -8,21 +10,96 @@ class AnimatedGridView extends StatefulWidget {
     required this.selectingItemsList,
     required this.crossAxisCount,
     required this.enableAnimation,
-    required this.animation}) : super(key: key);
+    required this.streamController}) : super(key: key);
 
   final List<dynamic> gridviewItems;
   final List<Map<String, dynamic>> selectingItemsList;
   final int crossAxisCount;
   final bool enableAnimation;
-  final Animation<Offset> animation;
+  final StreamController<bool> streamController;
 
   @override
   _AnimatedGridViewState createState() => _AnimatedGridViewState();
 }
 
-class _AnimatedGridViewState extends State<AnimatedGridView> with SingleTickerProviderStateMixin {
+class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProviderStateMixin {
+
+  List<AnimationController> animationControllerList = [];
+  List<Animation<Offset>> offsetAnimationList = [];
+
+  @override
+  void initState() {
+    createAnimations(widget.gridviewItems.length);
+    widget.streamController.stream.listen((data){
+      if (data == true) {
+        _startAnimation();
+      } else {
+        _finishAnimation();
+      }
+    });
+    super.initState();
+  }
+
+  void createAnimations(int itemLength) {
+    for (int i = 0; i < itemLength; i++) {
+      setState(() {
+        animationControllerList.add(
+            AnimationController(
+                duration: const Duration(milliseconds: 300),
+                vsync: this)
+        );
+
+        /// アイテムを削除した時にListを新しくするため、それまで空データを格納しておく
+        final Animation<Offset> offsetAnimation = Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.0, 0.0),
+        ).animate(animationControllerList.last);
+        offsetAnimationList.add(offsetAnimation);
+
+      });
+    }
+  }
 
 
+
+  void _startAnimation() {
+
+    /// 空データを消す。
+    offsetAnimationList.clear();
+    for (int i = 0; i < animationControllerList.length; i++) {
+      if (widget.selectingItemsList.contains(widget.gridviewItems[i])) {
+
+        /// 削除するアイテムのアニメーション（slideAnimationはなし）
+        final Animation<Offset> offsetAnimation = Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.0, 0.0),
+        ).animate(animationControllerList.last);
+        offsetAnimationList.add(offsetAnimation);
+
+      } else {
+
+        /// 残ったアイテムのアニメーション（アイテムに応じてアニメーションを変える）
+        final Animation<Offset> offsetAnimation = Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.0, -1.0),
+        ).chain(CurveTween(curve: Curves.easeInOut)
+        ).animate(animationControllerList.last);
+        offsetAnimationList.add(offsetAnimation);
+      }
+
+      /// 各アイテムのアニメーションスタート
+      animationControllerList[i].forward();
+    }
+  }
+
+  void _finishAnimation() {
+    for (int i = 0; i < animationControllerList.length; i++) {
+      animationControllerList[i].dispose();
+    }
+    animationControllerList.clear();
+    offsetAnimationList.clear();
+    createAnimations(widget.gridviewItems.length);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +116,13 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with SingleTickerPr
         mainAxisSpacing: 10,
       ),
       itemBuilder: (BuildContext context, int index) {
-
-
-
         return AnimatedOpacity(
           opacity: widget.selectingItemsList.contains(widget.gridviewItems[index]) && widget.enableAnimation
               ? 0
               : 1,
-          duration: const Duration(milliseconds: 200),
+          duration: widget.enableAnimation? const Duration(milliseconds: 300) : const Duration(milliseconds: 0),
           child: SlideTransition(
-            position: widget.animation,
+            position: offsetAnimationList[index],
             child: GestureDetector(
               onTap: () {
                 if (widget.selectingItemsList.contains(widget.gridviewItems[index])) {
@@ -94,37 +168,6 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with SingleTickerPr
       itemCount: widget.gridviewItems.length,
     );
   }
-}
-
-
-
-
-
-void deleteFunction({
-  required List<Map<String, dynamic>> gridviewItems,
-  required List<Map<String, dynamic>> selectingItemsList,
-  required int crossAxisCount,
-  required Function reBuild,
-  required Function startAnimation
-}) {
-
-  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
-      gridviewItems: gridviewItems,
-      selectingItemsList: selectingItemsList,
-      crossAxisCount: crossAxisCount);
-  /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
-
-
-
-  //todo: アイテムの削除アニメーションを追加する
-  startAnimation();
-
-
-  // for (int i = 0; i < selectingItemsList.length; i++) {
-  //   gridviewItems.remove(selectingItemsList[i]);
-  // }
-  // selectingItemsList.clear();
-  // reBuild();
 }
 
 
