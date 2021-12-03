@@ -145,28 +145,21 @@ void deleteFunction({
   required StreamController<bool> streamController
 }) {
 
-  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
-      gridviewItems: gridviewItems,
-      selectingItemsList: selectingItemsList,
-      crossAxisCount: crossAxisCount);
-  /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
-
-
   startAnimation();
   streamController.sink.add(true);
   /// アニメーションスタート
 
 
   //todo: アイテムを実際に削除する記述のため、アニメーションが完成したらコメントアウトを外す。
-  Timer(const Duration(milliseconds: 310), () {
-    finishAnimation();
-    for (int i = 0; i < selectingItemsList.length; i++) {
-      gridviewItems.remove(selectingItemsList[i]);
-    }
-    selectingItemsList.clear();
-    reBuild();
-
-    streamController.sink.add(false);
-    /// アニメーション終了
-  });
+  // Timer(const Duration(milliseconds: 310), () {
+  //   finishAnimation();
+  //   for (int i = 0; i < selectingItemsList.length; i++) {
+  //     gridviewItems.remove(selectingItemsList[i]);
+  //   }
+  //   selectingItemsList.clear();
+  //   reBuild();
+  //
+  //   streamController.sink.add(false);
+  //   /// アニメーション終了
+  // });
 }

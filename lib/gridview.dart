@@ -32,13 +32,18 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     createAnimations(widget.gridviewItems.length);
     widget.streamController.stream.listen((data){
       if (data == true) {
-        _startAnimation();
+        _startAnimation(
+          gridviewItems: widget.gridviewItems as List<Map<String, dynamic>>,
+          selectingItemsList: widget.selectingItemsList,
+          crossAxisCount: widget.crossAxisCount,
+        );
       } else {
         _finishAnimation();
       }
     });
     super.initState();
   }
+
 
   void createAnimations(int itemLength) {
     for (int i = 0; i < itemLength; i++) {
@@ -62,11 +67,28 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
 
 
-  void _startAnimation() {
+  void _startAnimation({
+    required List<Map<String, dynamic>> gridviewItems,
+    required List<Map<String, dynamic>> selectingItemsList,
+    required int crossAxisCount
+  }) {
+
+    /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
+    final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
+        gridviewItems: gridviewItems,
+        selectingItemsList: selectingItemsList,
+        crossAxisCount: crossAxisCount);
 
     /// 空データを消す。
     offsetAnimationList.clear();
+
+
     for (int i = 0; i < animationControllerList.length; i++) {
+
+
+      /// oldItemsListとnewItemsListを比較して同じIDのものを探して、rowPositionを比較＆columnPositionを比較する。
+      final Offset offsetEnd = Offset(1.085, 0.0);
+
       if (widget.selectingItemsList.contains(widget.gridviewItems[i])) {
 
         /// 削除するアイテムのアニメーション（slideAnimationはなし）
@@ -81,7 +103,10 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
         /// 残ったアイテムのアニメーション（アイテムに応じてアニメーションを変える）
         final Animation<Offset> offsetAnimation = Tween<Offset>(
           begin: Offset.zero,
-          end: const Offset(0.0, -1.0),
+          end: offsetEnd, // アイテム1個分の縦横幅 -1.085
+
+          //Offsetの左側はプラス値であれば右に移動する。マイナス値であれば左に移動する
+
         ).chain(CurveTween(curve: Curves.easeInOut)
         ).animate(animationControllerList.last);
         offsetAnimationList.add(offsetAnimation);
@@ -92,6 +117,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     }
   }
 
+
   void _finishAnimation() {
     for (int i = 0; i < animationControllerList.length; i++) {
       animationControllerList[i].dispose();
@@ -100,6 +126,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     offsetAnimationList.clear();
     createAnimations(widget.gridviewItems.length);
   }
+
 
   @override
   Widget build(BuildContext context) {
