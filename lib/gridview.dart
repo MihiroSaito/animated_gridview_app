@@ -74,7 +74,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
   }) {
 
     /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
-    final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = identifyThePositionToMove(
+    final List<Map<String, dynamic>> movingItemsInfoList = identifyThePositionToMove(
         gridviewItems: gridviewItems,
         selectingItemsList: selectingItemsList,
         crossAxisCount: crossAxisCount);
@@ -82,13 +82,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     /// 空データを消す。
     offsetAnimationList.clear();
 
-
     for (int i = 0; i < animationControllerList.length; i++) {
-
-
-      /// oldItemsListとnewItemsListを比較して同じIDのものを探して、rowPositionを比較＆columnPositionを比較する。
-      final Offset offsetEnd = Offset(1.085, 0.0);
-
       if (widget.selectingItemsList.contains(widget.gridviewItems[i])) {
 
         /// 削除するアイテムのアニメーション（slideAnimationはなし）
@@ -99,6 +93,10 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
         offsetAnimationList.add(offsetAnimation);
 
       } else {
+
+        final dx = 1.085 * movingItemsInfoList[i]['movingColumnCount'];
+        final dy = 1.085 * movingItemsInfoList[i]['movingRowCount'];
+        final Offset offsetEnd = Offset(dx, dy);
 
         /// 残ったアイテムのアニメーション（アイテムに応じてアニメーションを変える）
         final Animation<Offset> offsetAnimation = Tween<Offset>(
@@ -202,7 +200,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
 
 
-Map<String, dynamic> identifyThePositionToMove({
+List<Map<String, dynamic>> identifyThePositionToMove({
   required List<Map<String, dynamic>> gridviewItems,
   required List<Map<String, dynamic>> selectingItemsList,
   required int crossAxisCount
@@ -243,19 +241,30 @@ Map<String, dynamic> identifyThePositionToMove({
     newItemsInfoList.add(
         {'data': newItemsList[i], 'rowPosition': newRow, 'columnPosition': newColumn}
     );
+
   }
   /// rowPositionは何段目かを管理している。(0から始まる)
   /// columnPositionは何列目かを管理していて、(0から始まり、crossAxisCount - 1 で終わる)
   /// 例: 3列のgridviewであれば一番左の列が0で一番右の列がcrossAxisCount - 1 の2で終わる
   /// oldItemsPositionListとnewItemsPositionListの用意が完了
 
+  final List<Map<String, dynamic>> movingItemsInfoList = [];
 
+  for (int i = 0; i < oldItemsInfoList.length; i++) {
+    if (oldItemsInfoList[i]['data']['id'] == newItemsInfoList[i]['data']['id']) {
+      int movingRowCount = newItemsInfoList[i]['rowPosition'] - oldItemsInfoList[i]['rowPosition'];
+      int movingColumnCount = newItemsInfoList[i]['columnPosition'] - oldItemsInfoList[i]['columnPosition'];
+      movingItemsInfoList.add(
+        {'movingRowCount': movingRowCount, 'movingColumnCount': movingColumnCount}
+      );
+    } else {
+      newItemsInfoList.insert(i, {});
+      movingItemsInfoList.add(
+        {}
+      );
+    }
+  }
 
-  final Map<String, dynamic> oldItemsInfoListAndNewItemsInfoList = {
-    'oldItemsInfoList': oldItemsInfoList,
-    'newItemsInfoList': newItemsInfoList
-  };
-
-  return oldItemsInfoListAndNewItemsInfoList;
+  return movingItemsInfoList;
 
 }

@@ -151,15 +151,15 @@ void deleteFunction({
 
 
   //todo: アイテムを実際に削除する記述のため、アニメーションが完成したらコメントアウトを外す。
-  // Timer(const Duration(milliseconds: 310), () {
-  //   finishAnimation();
-  //   for (int i = 0; i < selectingItemsList.length; i++) {
-  //     gridviewItems.remove(selectingItemsList[i]);
-  //   }
-  //   selectingItemsList.clear();
-  //   reBuild();
-  //
-  //   streamController.sink.add(false);
-  //   /// アニメーション終了
-  // });
+  Timer(const Duration(milliseconds: 310), () {
+    finishAnimation();
+    for (int i = 0; i < selectingItemsList.length; i++) {
+      gridviewItems.remove(selectingItemsList[i]);
+    }
+    selectingItemsList.clear();
+    reBuild();
+
+    streamController.sink.add(false);
+    /// アニメーション終了
+  });
 }
