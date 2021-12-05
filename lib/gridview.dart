@@ -268,3 +268,60 @@ List<Map<String, dynamic>> identifyThePositionToMove({
   return movingItemsInfoList;
 
 }
+
+
+
+
+/// アイテムを削除するための関数
+void deleteFunction({
+  required List<Map<String, dynamic>> gridviewItems,
+  required List<Map<String, dynamic>> selectingItemsList,
+  required int crossAxisCount,
+  required Function reBuild,
+  required Function startAnimation,
+  required Function finishAnimation,
+  required StreamController<bool> streamController
+}) {
+
+  startAnimation();
+  streamController.sink.add(true);
+  /// アニメーションスタート
+
+
+  Timer(const Duration(milliseconds: 310), () {
+    finishAnimation();
+    for (int i = 0; i < selectingItemsList.length; i++) {
+      gridviewItems.remove(selectingItemsList[i]);
+    }
+    selectingItemsList.clear();
+    reBuild();
+
+    streamController.sink.add(false);
+    /// アニメーション終了
+  });
+}
+
+
+/// deleteFunctionの呼び出しに必要な関数と変数
+// List<Map<String, dynamic>> selectingItemsList = [];
+//
+// void reBuild() {
+//   setState(() {});
+// }
+//
+//
+// bool enableAnimation = false;
+//
+// void startAnimation() {
+//   setState(() {
+//     enableAnimation = true;
+//   });
+// }
+//
+// void finishAnimation() {
+//   setState(() {
+//     enableAnimation = false;
+//   });
+// }
+//
+// final streamController = StreamController<bool>();
