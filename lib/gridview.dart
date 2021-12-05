@@ -228,7 +228,7 @@ List<Map<String, dynamic>> identifyThePositionToMove({
     int currentRow = (i / crossAxisCount).floor();
     int currentColumn = i % crossAxisCount;
     oldItemsInfoList.add(
-        {'data': oldItemsList[i], 'rowPosition': currentRow, 'columnPosition': currentColumn}
+        {'id': oldItemsList[i]['id'], 'rowPosition': currentRow, 'columnPosition': currentColumn}
     );
   }
 
@@ -239,7 +239,7 @@ List<Map<String, dynamic>> identifyThePositionToMove({
     int newRow = (i / crossAxisCount).floor();
     int newColumn = i % crossAxisCount;
     newItemsInfoList.add(
-        {'data': newItemsList[i], 'rowPosition': newRow, 'columnPosition': newColumn}
+        {'id': newItemsList[i]['id'], 'rowPosition': newRow, 'columnPosition': newColumn}
     );
 
   }
@@ -251,7 +251,7 @@ List<Map<String, dynamic>> identifyThePositionToMove({
   final List<Map<String, dynamic>> movingItemsInfoList = [];
 
   for (int i = 0; i < oldItemsInfoList.length; i++) {
-    if (oldItemsInfoList[i]['data']['id'] == newItemsInfoList[i]['data']['id']) {
+    if (oldItemsInfoList[i]['id'] == newItemsInfoList[i]['id']) {
       int movingRowCount = newItemsInfoList[i]['rowPosition'] - oldItemsInfoList[i]['rowPosition'];
       int movingColumnCount = newItemsInfoList[i]['columnPosition'] - oldItemsInfoList[i]['columnPosition'];
       movingItemsInfoList.add(
