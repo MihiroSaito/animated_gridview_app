@@ -201,6 +201,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
 
 List<Map<String, dynamic>> identifyThePositionToMove({
+  //todo: gridviewItemsのmap内のkeyには'id'が必須
   required List<Map<String, dynamic>> gridviewItems,
   required List<Map<String, dynamic>> selectingItemsList,
   required int crossAxisCount
