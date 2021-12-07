@@ -27,6 +27,8 @@ class MyApp extends StatelessWidget {
 
 const int crossAxisCount = 3;
 
+const double mainAxisSpace = 10.0;
+
 
 
 class MyHomePage extends StatefulWidget {
@@ -71,6 +73,44 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     {'id': '27'},
     {'id': '28'},
     {'id': '29'},
+    {'id': '30'},
+    {'id': '31'},
+    {'id': '32'},
+    {'id': '33'},
+    {'id': '34'},
+    {'id': '35'},
+    {'id': '36'},
+    {'id': '37'},
+    {'id': '38'},
+    {'id': '39'},
+    {'id': '40'},
+    {'id': '41'},
+    {'id': '42'},
+    {'id': '43'},
+    {'id': '44'},
+    {'id': '45'},
+    {'id': '46'},
+    {'id': '47'},
+    {'id': '48'},
+    {'id': '49'},
+    {'id': '50'},
+    {'id': '51'},
+    {'id': '52'},
+    {'id': '53'},
+    {'id': '54'},
+    {'id': '55'},
+    {'id': '56'},
+    {'id': '57'},
+    {'id': '58'},
+    {'id': '59'},
+    {'id': '60'},
+    {'id': '61'},
+    {'id': '62'},
+    {'id': '63'},
+    {'id': '64'},
+    {'id': '65'},
+
+
   ];
 
   /// 削除したいアイテムを管理するリスト
@@ -116,7 +156,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           selectingItemsList: selectingItemsList,
           crossAxisCount: crossAxisCount,
           enableAnimation: enableAnimation,
-          streamController: streamController),
+          streamController: streamController,
+          padding: const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 15),
+          crossAxisSpacing: 10.0,
+          mainAxisSpacing: mainAxisSpace),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           deleteFunction(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class AnimatedGridView extends StatefulWidget {
 
@@ -10,13 +11,25 @@ class AnimatedGridView extends StatefulWidget {
     required this.selectingItemsList,
     required this.crossAxisCount,
     required this.enableAnimation,
-    required this.streamController}) : super(key: key);
+    required this.streamController,
+
+    /// Gridviewに渡す変数
+    /// todo: ここの値を変更した場合、offsetAnimationの値を調節する
+    this.padding = const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 15),
+    this.crossAxisSpacing = 10.0,
+    this.mainAxisSpacing = 10.0,
+  }) : super(key: key);
 
   final List<dynamic> gridviewItems;
   final List<Map<String, dynamic>> selectingItemsList;
   final int crossAxisCount;
   final bool enableAnimation;
   final StreamController<bool> streamController;
+
+  /// Gridviewに渡す変数
+  final EdgeInsets padding;
+  final double crossAxisSpacing;
+  final double mainAxisSpacing;
 
   @override
   _AnimatedGridViewState createState() => _AnimatedGridViewState();
@@ -26,9 +39,16 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
   List<AnimationController> animationControllerList = [];
   List<Animation<Offset>> offsetAnimationList = [];
+  GlobalKey gridviewKey = GlobalKey();
+  GlobalKey gridviewItemKey = GlobalKey();
+  late ScrollController _scrollController;
+
+  int count = 0;
+  late Size gridviewItemSize;
 
   @override
   void initState() {
+    _scrollController = ScrollController();
     createAnimations(widget.gridviewItems.length);
     widget.streamController.stream.listen((data){
       if (data == true) {
@@ -36,6 +56,8 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
           gridviewItems: widget.gridviewItems as List<Map<String, dynamic>>,
           selectingItemsList: widget.selectingItemsList,
           crossAxisCount: widget.crossAxisCount,
+          mainAxisSpace: widget.mainAxisSpacing,
+          padding: widget.padding
         );
       } else {
         _finishAnimation();
@@ -70,8 +92,49 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
   void _startAnimation({
     required List<Map<String, dynamic>> gridviewItems,
     required List<Map<String, dynamic>> selectingItemsList,
-    required int crossAxisCount
+    required int crossAxisCount,
+    required double mainAxisSpace,
+    required EdgeInsets padding
   }) {
+
+    final RenderBox renderBox = gridviewKey.currentContext?.findRenderObject() as RenderBox;
+    final Size gridViewSize = renderBox.size;
+    /// girdviewのSize
+
+    var result = gridViewSize.height / (gridviewItemSize.height + mainAxisSpace);
+    int displayableRows = result.ceil() + 1;
+    int displayableItemCount = displayableRows * crossAxisCount;
+    /// 1画面に表示できるアイテムの数を取得する。
+
+    double aaa = _scrollController.offset / (gridviewItemSize.height + mainAxisSpace);
+    /// 画面外（上）に段数を取得する 例: 3.31243215（3段と1/3段ある）
+
+    int previouslyDisplayedItemCount = aaa.floor() * crossAxisCount;
+    /// 画面外（上）にあるアイテムの数を取得する。
+
+    List<Map<String, dynamic>> itemsRelateInAnimationList = [...gridviewItems];
+    itemsRelateInAnimationList.removeRange(0, previouslyDisplayedItemCount);
+    itemsRelateInAnimationList.removeRange(displayableItemCount + selectingItemsList.length, itemsRelateInAnimationList.length);
+    /// アニメーションに関係するアイテムの数を取得
+
+    double affectsAnimationAreaHeight =
+        (itemsRelateInAnimationList.length / crossAxisCount) *
+            (gridviewItemSize.height + mainAxisSpace) + padding.top + padding.bottom;
+    /// アニメーションに必要なWidgetの高さ。
+
+
+
+    double bbb = double.parse(aaa.toString().replaceAll('${aaa.floor()}.', '0.'));
+    /// 画面に表示されている最初の段の表示具合（%）を取得する 例: 0.562238（1つのアイテムの約半分が表示されている）
+
+    double scrollAmountSurplus = gridviewItemSize.height * bbb;
+    /// 画面に表示されている最初の段の表示具合（サイズ）を取得する
+
+
+    // _scrollController.jumpTo(gridviewItemSize.height * scrollAmountSurplus + 1);
+
+
+
 
     /// アイテムを削除する前と削除した後の位置を管理するリストを取得する。
     final List<Map<String, dynamic>> movingItemsInfoList = identifyThePositionToMove(
@@ -125,63 +188,78 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     createAnimations(widget.gridviewItems.length);
   }
 
+  @override
+  void dispose() {
+    for (int i = 0; i < animationControllerList.length; i++) {
+      animationControllerList[i].dispose();
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.only(
-          top: 15,
-          left: 10,
-          right: 10,
-          bottom: 15
-      ),
+      key: gridviewKey,
+      controller: _scrollController,
+      padding: widget.padding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: widget.crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+        crossAxisSpacing: widget.crossAxisSpacing,
+        mainAxisSpacing: widget.mainAxisSpacing,
       ),
       itemBuilder: (BuildContext context, int index) {
-        return AnimatedOpacity(
-          opacity: widget.selectingItemsList.contains(widget.gridviewItems[index]) && widget.enableAnimation
-              ? 0
-              : 1,
-          duration: widget.enableAnimation? const Duration(milliseconds: 300) : const Duration(milliseconds: 0),
-          child: SlideTransition(
-            position: offsetAnimationList[index],
-            child: GestureDetector(
-              onTap: () {
-                if (widget.selectingItemsList.contains(widget.gridviewItems[index])) {
-                  setState(() {
-                    widget.selectingItemsList.remove(widget.gridviewItems[index]);
-                  });
-                } else {
-                  setState(() {
-                    widget.selectingItemsList.add(widget.gridviewItems[index]);
-                  });
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    color: widget.selectingItemsList.contains(widget.gridviewItems[index])
-                        ? Colors.indigo
-                        : Colors.blue,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 2,
-                        blurRadius: 15,
-                        offset: const Offset(0, 0),
-                      )
-                    ]
-                ),
-                child: Center(
-                  child: Text(
-                    widget.gridviewItems[index]['id'],
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16
+        return VisibilityDetector(
+          onVisibilityChanged: (visibilityInfo) {
+            if (count == 0) {
+              gridviewItemSize = visibilityInfo.size;
+            }
+            count++;
+          },
+          key: UniqueKey(),
+          child: AnimatedOpacity(
+            opacity: widget.selectingItemsList.contains(widget.gridviewItems[index]) && widget.enableAnimation
+                ? 0
+                : 1,
+            duration: widget.enableAnimation? const Duration(milliseconds: 300) : const Duration(milliseconds: 0),
+            child: SlideTransition(
+              position: offsetAnimationList[index],
+              child: GestureDetector(
+                onTap: () {
+                  if (widget.selectingItemsList.contains(widget.gridviewItems[index])) {
+                    setState(() {
+                      widget.selectingItemsList.remove(widget.gridviewItems[index]);
+                    });
+                  } else {
+                    setState(() {
+                      widget.selectingItemsList.add(widget.gridviewItems[index]);
+                    });
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: widget.selectingItemsList.contains(widget.gridviewItems[index])
+                          ? Colors.indigo
+                          : Colors.blue,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 15,
+                          offset: const Offset(0, 0),
+                        )
+                      ]
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.gridviewItems[index]['id'],
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16
+                      ),
                     ),
                   ),
                 ),
