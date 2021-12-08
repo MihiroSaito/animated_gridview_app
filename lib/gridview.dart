@@ -3,6 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+
+/// todo: SlideAnimationで使用するアイテム1個分の縦横幅を指定する（Offset値）
+const double itemVerticalWidthForOffset = 1.085;
+const double itemHorizontalWidthForOffset = 1.085;
+
 class AnimatedGridView extends StatefulWidget {
 
   const AnimatedGridView({
@@ -37,8 +42,10 @@ class AnimatedGridView extends StatefulWidget {
 
 class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProviderStateMixin {
 
-  List<AnimationController> animationControllerList = [];
+  List<AnimationController> animationControllerListForOffset = [];
   List<Animation<Offset>> offsetAnimationList = [];
+  List<AnimationController> animationControllerListForOpacity = [];
+  List<Animation<double>> opacityAnimationList = [];
   GlobalKey gridviewKey = GlobalKey();
   GlobalKey gridviewItemKey = GlobalKey();
   late ScrollController _scrollControllerForGridview;
@@ -73,7 +80,9 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
   void createAnimations(int itemLength) {
     for (int i = 0; i < itemLength; i++) {
       setState(() {
-        animationControllerList.add(
+
+        /// slideAnimation用のアニメーションを作成する
+        animationControllerListForOffset.add(
             AnimationController(
                 duration: const Duration(milliseconds: 300),
                 vsync: this)
@@ -83,8 +92,23 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
         final Animation<Offset> offsetAnimation = Tween<Offset>(
           begin: Offset.zero,
           end: const Offset(0.0, 0.0),
-        ).animate(animationControllerList.last);
+        ).animate(animationControllerListForOffset.last);
         offsetAnimationList.add(offsetAnimation);
+
+
+        /// FadeOutAnimation用のアニメーションを作成する
+        animationControllerListForOpacity.add(
+            AnimationController(
+                duration: const Duration(milliseconds: 150),
+                vsync: this)
+        );
+
+        /// アイテムを削除した時にListを新しくするため、それまで空データを格納しておく
+        final Animation<double> opacityAnimation = Tween<double>(
+          begin: 1.0,
+          end: 1.0,
+        ).animate(animationControllerListForOpacity.last);
+        opacityAnimationList.add(opacityAnimation);
 
       });
     }
@@ -99,10 +123,6 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
     required double mainAxisSpace,
     required EdgeInsets padding
   }) {
-
-    // setState(() {
-    //   isUsingPartGridview = true;
-    // });
 
     final RenderBox renderBox = gridviewKey.currentContext?.findRenderObject() as RenderBox;
     final Size gridViewSize = renderBox.size;
@@ -149,37 +169,52 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
     /// 空データを消す。
     offsetAnimationList.clear();
+    opacityAnimationList.clear();
 
-    for (int i = 0; i < animationControllerList.length; i++) {
+    for (int i = 0; i < animationControllerListForOffset.length; i++) {
       if (widget.selectingItemsList.contains(widget.gridviewItems[i])) {
 
-        /// 削除するアイテムのアニメーション（slideAnimationはなし）
+        /// 削除するアイテムのアニメーション（slideAnimationなし & FadeOutあり）
         final Animation<Offset> offsetAnimation = Tween<Offset>(
           begin: Offset.zero,
           end: const Offset(0.0, 0.0),
-        ).animate(animationControllerList.last);
+        ).animate(animationControllerListForOffset.last);
         offsetAnimationList.add(offsetAnimation);
+
+        final Animation<double> opacityAnimation = Tween<double>(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)
+        ).animate(animationControllerListForOpacity.last);
+        opacityAnimationList.add(opacityAnimation);
 
       } else {
 
-        final dx = 1.085 * movingItemsInfoList[i]['movingColumnCount'];
-        final dy = 1.085 * movingItemsInfoList[i]['movingRowCount'];
+        final dx = itemHorizontalWidthForOffset * movingItemsInfoList[i]['movingColumnCount'];
+        final dy = itemVerticalWidthForOffset * movingItemsInfoList[i]['movingRowCount'];
         final Offset offsetEnd = Offset(dx, dy);
 
         /// 残ったアイテムのアニメーション（アイテムに応じてアニメーションを変える）
         final Animation<Offset> offsetAnimation = Tween<Offset>(
           begin: Offset.zero,
-          end: offsetEnd, // アイテム1個分の縦横幅 -1.085
+          end: offsetEnd,
 
           //Offsetの左側はプラス値であれば右に移動する。マイナス値であれば左に移動する
 
         ).chain(CurveTween(curve: Curves.easeInOut)
-        ).animate(animationControllerList.last);
+        ).animate(animationControllerListForOffset.last);
         offsetAnimationList.add(offsetAnimation);
+
+        final Animation<double> opacityAnimation = Tween<double>(
+          begin: 1.0,
+          end: 1.0,
+        ).animate(animationControllerListForOpacity.last);
+        opacityAnimationList.add(opacityAnimation);
       }
 
       /// 各アイテムのアニメーションスタート
-      animationControllerList[i].forward();
+      animationControllerListForOffset[i].forward();
+      animationControllerListForOpacity[i].forward();
     }
 
     if (_scrollControllerForSingleChildView.hasClients) {
@@ -189,18 +224,21 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
 
 
   void _finishAnimation() {
-    for (int i = 0; i < animationControllerList.length; i++) {
-      animationControllerList[i].dispose();
+    for (int i = 0; i < animationControllerListForOffset.length; i++) {
+      animationControllerListForOffset[i].dispose();
+      animationControllerListForOpacity[i].dispose();
     }
-    animationControllerList.clear();
+    animationControllerListForOffset.clear();
     offsetAnimationList.clear();
+    animationControllerListForOpacity.clear();
+    opacityAnimationList.clear();
     createAnimations(widget.gridviewItems.length);
   }
 
   @override
   void dispose() {
-    for (int i = 0; i < animationControllerList.length; i++) {
-      animationControllerList[i].dispose();
+    for (int i = 0; i < animationControllerListForOffset.length; i++) {
+      animationControllerListForOffset[i].dispose();
     }
     _scrollControllerForGridview.dispose();
     _scrollControllerForSingleChildView.dispose();
@@ -236,6 +274,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
                   gridviewItems: widget.gridviewItems,
                   index: index,
                   enableAnimation: widget.enableAnimation,
+                  opacityAnimationList: opacityAnimationList,
                   offsetAnimationList: offsetAnimationList,
                   setState: setState)
             );
@@ -260,6 +299,7 @@ class _AnimatedGridViewState extends State<AnimatedGridView> with TickerProvider
                     gridviewItems: widget.gridviewItems,
                     index: index,
                     enableAnimation: widget.enableAnimation,
+                    opacityAnimationList: opacityAnimationList,
                     offsetAnimationList: offsetAnimationList,
                     setState: setState);
               },
@@ -275,15 +315,13 @@ Widget itemWidget({
   required List<Map<String, dynamic>> gridviewItems,
   required int index,
   required bool enableAnimation,
+  required List<Animation<double>> opacityAnimationList,
   required List<Animation<Offset>> offsetAnimationList,
   required Function setState
 }) {
   //todo: どうにかしてFadeOutを聞かせるようにする
-  return AnimatedOpacity(
-    opacity: selectingItemsList.contains(gridviewItems[index]) && enableAnimation
-        ? 0
-        : 1,
-    duration: enableAnimation? const Duration(milliseconds: 300) : const Duration(milliseconds: 0),
+  return FadeTransition(
+    opacity: opacityAnimationList[index],
     child: SlideTransition(
       position: offsetAnimationList[index],
       child: GestureDetector(
