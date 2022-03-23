@@ -1,16 +1,6 @@
 # animated_gridview_app
 
-A new Flutter project.
+Appleの純正アプリでよくある削除アニメーションを再現したもの
 
-## Getting Started
+https://user-images.githubusercontent.com/61680540/159658602-1e2afb20-69d4-4ff8-a617-c4953e7933fd.MP4
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
